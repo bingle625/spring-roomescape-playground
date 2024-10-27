@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import roomescape.exceptions.BadRequestException;
 
 @RestController
 public class ReservationApiController {
@@ -26,6 +27,9 @@ public class ReservationApiController {
 
   @PostMapping("/reservations")
   public ResponseEntity<Reservation> create(@RequestBody Reservation reservation) {
+    if (reservation.getDate().isEmpty() || reservation.getTime().isEmpty() || reservation.getName().isEmpty()) {
+      throw new BadRequestException("올바르지 않은 입력입니다.");
+    }
     Reservation newReservation = Reservation.toEntity(reservation, index.getAndIncrement());
     reservations.add(newReservation);
     return ResponseEntity.created(URI.create("/reservations/" + this.reservations.size()))
@@ -37,7 +41,7 @@ public class ReservationApiController {
     Reservation targetReservation = reservations.stream()
         .filter(target -> Objects.equals(target.getId(), id))
         .findFirst()
-        .orElseThrow(RuntimeException::new);
+        .orElseThrow(()-> new BadRequestException("존재하지 않는 예약입니다."));
 
     reservations.remove(targetReservation);
     return ResponseEntity.noContent().build();
