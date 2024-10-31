@@ -5,7 +5,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,14 +22,21 @@ public class ReservationApiController {
   private final List<Reservation> reservations = new ArrayList<>();
   private AtomicLong index = new AtomicLong(1);
 
+  @Autowired
+  private JdbcTemplate jdbcTemplate;
+
   @GetMapping("/reservations")
   public ResponseEntity<List<Reservation>> getReservations() {
-    return ResponseEntity.ok().body(this.reservations);
+    List<Reservation> reservations = jdbcTemplate.query("select * from reservation",
+        ((rs, rowNum) -> new Reservation(rs.getLong("id"), rs.getString("name"),
+            rs.getString("date"), rs.getString("time"))));
+    return ResponseEntity.ok().body(reservations);
   }
 
   @PostMapping("/reservations")
   public ResponseEntity<Reservation> create(@RequestBody Reservation reservation) {
-    if (reservation.getDate().isEmpty() || reservation.getTime().isEmpty() || reservation.getName().isEmpty()) {
+    if (reservation.getDate().isEmpty() || reservation.getTime().isEmpty() || reservation.getName()
+        .isEmpty()) {
       throw new BadRequestException("올바르지 않은 입력입니다.");
     }
     Reservation newReservation = Reservation.toEntity(reservation, index.getAndIncrement());
@@ -41,7 +50,7 @@ public class ReservationApiController {
     Reservation targetReservation = reservations.stream()
         .filter(target -> Objects.equals(target.getId(), id))
         .findFirst()
-        .orElseThrow(()-> new BadRequestException("존재하지 않는 예약입니다."));
+        .orElseThrow(() -> new BadRequestException("존재하지 않는 예약입니다."));
 
     reservations.remove(targetReservation);
     return ResponseEntity.noContent().build();
