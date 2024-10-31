@@ -1,6 +1,7 @@
 package roomescape;
 
 public class Reservation {
+
   private Long id;
   private String name;
   private String date;
@@ -32,5 +33,9 @@ public class Reservation {
 
   public static Reservation toEntity(Reservation reservation, Long id) {
     return new Reservation(id, reservation.name, reservation.date, reservation.time);
+  }
+
+  public void setId(final Long id) {
+    this.id = id;
   }
 }
