@@ -25,6 +25,9 @@ public class ReservationApiController {
   @Autowired
   private JdbcTemplate jdbcTemplate;
 
+  @Autowired
+  private ReservationRepository reservationRepository;
+
   @GetMapping("/reservations")
   public ResponseEntity<List<Reservation>> getReservations() {
     List<Reservation> reservations = jdbcTemplate.query("select * from reservation",
@@ -41,18 +44,10 @@ public class ReservationApiController {
       throw new BadRequestException("올바르지 않은 입력입니다.");
     }
 
-    SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate).withTableName(
-        "reservation").usingGeneratedKeyColumns("id");
+    Reservation newReservation =  this.reservationRepository.save(reservation);
 
-    Map<String, Object> map = new HashMap<>();
-    map.put("name", reservation.getName());
-    map.put("date", reservation.getDate());
-    map.put("time", reservation.getTime());
-    Number newId = simpleJdbcInsert.executeAndReturnKey(map);
-    reservation.setId(newId.longValue());
-
-    return ResponseEntity.created(URI.create("/reservations/" + newId.longValue()))
-        .body(reservation);
+    return ResponseEntity.created(URI.create("/reservations/" + newReservation.getId()))
+        .body(newReservation);
   }
 
   @DeleteMapping("/reservations/{id}")

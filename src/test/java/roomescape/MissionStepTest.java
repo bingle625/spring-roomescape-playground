@@ -23,6 +23,9 @@ public class MissionStepTest {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    private ReservationRepository reservationRepository;
+
     @Test
     void 일단계() {
         RestAssured.given().log().all()
@@ -114,8 +117,9 @@ public class MissionStepTest {
 
     @Test
     void 육단계() {
-        jdbcTemplate.update("INSERT INTO reservation (name, date, time) VALUES (?, ?, ?)", "브라운", "2023-08-05", "15:40");
 
+//        jdbcTemplate.update("INSERT INTO reservation (name, date, time) VALUES (?, ?, ?)", "브라운", "2023-08-05", "15:40");
+        reservationRepository.save(new Reservation("브라운", "2023-08-05", "15:40"));
         List<Reservation> reservations = RestAssured.given().log().all()
             .when().get("/reservations")
             .then().log().all()
