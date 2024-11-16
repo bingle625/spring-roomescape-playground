@@ -44,7 +44,7 @@ public class ReservationApiController {
       throw new BadRequestException("올바르지 않은 입력입니다.");
     }
 
-    Reservation newReservation =  this.reservationRepository.save(reservation);
+    Reservation newReservation = this.reservationRepository.save(reservation);
 
     return ResponseEntity.created(URI.create("/reservations/" + newReservation.getId()))
         .body(newReservation);
@@ -52,14 +52,9 @@ public class ReservationApiController {
 
   @DeleteMapping("/reservations/{id}")
   public ResponseEntity<Void> delete(@PathVariable Long id) {
-    int count = this.jdbcTemplate.queryForObject(
-        "select count(*) from reservation where id = ?", new Object[]{id}, int.class);
-
-    if (count == 0) {
-      throw new BadRequestException("존재하지 않는 예약입니다.");
-    }
-
-    this.jdbcTemplate.update("delete from reservation where id = ?", id);
+    Reservation reservation = this.reservationRepository.findById(id)
+        .orElseThrow(() -> new BadRequestException("존재하지 않는 예약입니다."));
+    this.reservationRepository.delete(reservation);
 
     return ResponseEntity.noContent().build();
   }
