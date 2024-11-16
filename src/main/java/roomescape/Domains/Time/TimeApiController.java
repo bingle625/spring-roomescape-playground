@@ -19,40 +19,4 @@ import roomescape.exceptions.BadRequestException;
 @RestController
 public class TimeApiController {
 
-  @Autowired
-  private JdbcTemplate jdbcTemplate;
-
-  @Autowired
-  private ReservationRepository reservationRepository;
-
-  @GetMapping("/reservations")
-  public ResponseEntity<List<Reservation>> getReservations() {
-    List<Reservation> reservations = jdbcTemplate.query("select * from reservation",
-        ((rs, rowNum) -> new Reservation(rs.getLong("id"), rs.getString("name"),
-            rs.getString("date"), rs.getString("time"))));
-    return ResponseEntity.ok().body(reservations);
-  }
-
-  @PostMapping("/reservations")
-  public ResponseEntity<Reservation> create(@RequestBody Reservation reservation) {
-    if (Objects.isNull(reservation.getDate()) || reservation.getDate().isEmpty() ||
-        Objects.isNull(reservation.getTime()) || reservation.getTime().isEmpty() ||
-        Objects.isNull(reservation.getName()) || reservation.getName().isEmpty()) {
-      throw new BadRequestException("올바르지 않은 입력입니다.");
-    }
-
-    Reservation newReservation = this.reservationRepository.save(reservation);
-
-    return ResponseEntity.created(URI.create("/reservations/" + newReservation.getId()))
-        .body(newReservation);
-  }
-
-  @DeleteMapping("/reservations/{id}")
-  public ResponseEntity<Void> delete(@PathVariable Long id) {
-    Reservation reservation = this.reservationRepository.findById(id)
-        .orElseThrow(() -> new BadRequestException("존재하지 않는 예약입니다."));
-    this.reservationRepository.delete(reservation);
-
-    return ResponseEntity.noContent().build();
-  }
 }
