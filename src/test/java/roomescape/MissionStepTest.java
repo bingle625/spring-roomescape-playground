@@ -17,6 +17,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 import roomescape.Domains.Reservation.Reservation;
 import roomescape.Domains.Reservation.ReservationRepository;
+import roomescape.Domains.Time.Time;
+import roomescape.Domains.Time.TimeRepository;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
@@ -28,12 +30,15 @@ public class MissionStepTest {
     @Autowired
     private ReservationRepository reservationRepository;
 
+    @Autowired
+    private TimeRepository timeRepository;
+
     @Test
     void 일단계() {
         RestAssured.given().log().all()
-                .when().get("/")
-                .then().log().all()
-                .statusCode(200);
+            .when().get("/")
+            .then().log().all()
+            .statusCode(200);
     }
 
     @Test
@@ -52,6 +57,7 @@ public class MissionStepTest {
 
     @Test
     void 삼단계() {
+        timeRepository.save(new Time("15:40"));
         Map<String, String> params = new HashMap<>();
         params.put("name", "브라운");
         params.put("date", "2023-08-05");
@@ -111,7 +117,8 @@ public class MissionStepTest {
         try (Connection connection = jdbcTemplate.getDataSource().getConnection()) {
             assertThat(connection).isNotNull();
             assertThat(connection.getCatalog()).isEqualTo("DATABASE");
-            assertThat(connection.getMetaData().getTables(null, null, "RESERVATION", null).next()).isTrue();
+            assertThat(connection.getMetaData().getTables(null, null, "RESERVATION", null)
+                .next()).isTrue();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -121,14 +128,16 @@ public class MissionStepTest {
     void 육단계() {
 
 //        jdbcTemplate.update("INSERT INTO reservation (name, date, time) VALUES (?, ?, ?)", "브라운", "2023-08-05", "15:40");
-        reservationRepository.save(new Reservation("브라운", "2023-08-05", "15:40"));
+        Time newTime = timeRepository.save(new Time("15:40"));
+        reservationRepository.save(new Reservation("브라운", "2023-08-05", newTime));
         List<Reservation> reservations = RestAssured.given().log().all()
             .when().get("/reservations")
             .then().log().all()
             .statusCode(200).extract()
             .jsonPath().getList(".", Reservation.class);
 
-        Integer count = jdbcTemplate.queryForObject("SELECT count(1) from reservation", Integer.class);
+        Integer count = jdbcTemplate.queryForObject("SELECT count(1) from reservation",
+            Integer.class);
 
         assertThat(reservations.size()).isEqualTo(count);
     }
@@ -157,4 +166,20 @@ public class MissionStepTest {
             .then().log().all()
             .statusCode(204);
     }
+
+    @Test
+    void 구단계() {
+        Map<String, String> reservation = new HashMap<>();
+        reservation.put("name", "브라운");
+        reservation.put("date", "2023-08-05");
+        reservation.put("time", "10:00");
+
+        RestAssured.given().log().all()
+            .contentType(ContentType.JSON)
+            .body(reservation)
+            .when().post("/reservations")
+            .then().log().all()
+            .statusCode(400);
+    }
+
 }

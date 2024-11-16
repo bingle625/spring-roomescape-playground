@@ -1,9 +1,14 @@
 package roomescape.Domains.Reservation;
 
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
+import roomescape.Domains.Time.Time;
 
 @Entity
 public class Reservation {
@@ -17,16 +22,11 @@ public class Reservation {
 
   private String name;
   private String date;
-  private String time;
+  @ManyToOne
+  @JoinColumn(name = "time_id")
+  private Time time;
 
-  public Reservation(final String name, final String date, final String time) {
-    this.name = name;
-    this.date = date;
-    this.time = time;
-  }
-
-  public Reservation(final Long id, final String name, final String date, final String time) {
-    this.id = id;
+  public Reservation(final String name, final String date, final Time time) {
     this.name = name;
     this.date = date;
     this.time = time;
@@ -36,7 +36,7 @@ public class Reservation {
     return id;
   }
 
-  public String getTime() {
+  public Time getTime() {
     return time;
   }
 
@@ -47,10 +47,6 @@ public class Reservation {
 
   public String getDate() {
     return date;
-  }
-
-  public static Reservation toEntity(Reservation reservation) {
-    return new Reservation(reservation.name, reservation.date, reservation.time);
   }
 
   public void setId(final Long id) {
