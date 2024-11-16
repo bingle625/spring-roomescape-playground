@@ -11,6 +11,10 @@ public class Time {
   public Time() {
   }
 
+  public Time(String time) {
+    this.time = time;
+  }
+
   @Id
   @GeneratedValue(strategy = GenerationType.AUTO)
   private Long id;
